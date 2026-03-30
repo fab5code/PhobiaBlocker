@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Popup of PhobiaBlocker</title>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Reem+Kufi" rel="stylesheet">
+  <link href="./../common/styles.less" rel="stylesheet" type="text/css">
+</head>
+
+<body ontouchstart="" class="body darkMode">
+  <div class="popup">
+
+    <img id="js-logo" class="logo small" src="../../img/logo_darkMode.svg" alt="PhobiaBlocker Logo">
+
+    <div id="js-tm" class="popup-category nodisplay">
+      <span class="tm-description">A fabulous</span>
+      <span class="tm-text rainbowEffect">Tibetan Mastiff</span>
+      <span class="tm-description">was found on this page!</span>
+    </div>
+
+    <div id="js-stats" class="popup-category nodisplay">
+      <p class="option-name">Statistics</p>
+      <div><span id="js-nbAnalysedImages"></span> / <span id="js-nbImages"></span> processed
+        images (in the top frame)</div>
+      <div><span id="js-nbBlockedImages"></span> blocked images</div>
+      <div><span id="js-nbIgnoredImages"></span> ignored images</div>
+      <div><span id="js-nbFailedImages"></span> images with failed assessment</div>
+    </div>
+
+    <div class="popup-category">
+      <p class="option-name">Options</p>
+
+      <p class="option-instruction">Decide what to block</p>
+      <input id="js-spiderLikeOption" type="checkbox" name="spider-like option">
+      <label for="js-spiderLikeOption"
+        title="Block all images representing a spider or something similar">Spider-like</label>
+      <input id="js-insectLikeOption" type="checkbox" name="insect-like option">
+      <label for="js-insectLikeOption"
+        title="Block all images representing an insect or something similar">Insect-like</label>
+
+      <div id="js-trustSite" class="popup-trustSite nodisplay">
+        <div id="js-trustSite-trusted">
+          <p class="popup-text"><span class="trust">This page is trusted</span> (in the top frame).</p>
+          <p class="popup-text">Automatic blocker is deactivated. Manual blocking is still possible by right
+            clicking images.
+            You can manage which pages to trust in the advanced options.</p>
+          <p class="popup-text">This page is trusted according to this regex in your options:</p>
+          <span id="js-trustSite-regex" class="regexes-example" style="padding-left: 5px;"></span>
+        </div>
+        <div id="js-trustSite-notTrusted">
+          <button id="js-trustSite-add" class="button">Label this website as trusted</button>
+          <p class="popup-text">As a trusted website (domain name with sub domain) the automatic blocker will
+            be deactivated.
+            You can also manage which pages to trust in the advanced options.</p>
+        </div>
+      </div>
+
+
+      <div class="checkbox-wrapper">
+        <label class="checkbox">
+          <input id="js-pause-input" type="checkbox" class="checkbox-input">
+          <span class="checkbox-symbol"></span>
+          <span class="checkbox-message">Pause automatic blocking on all websites</span>
+        </label>
+      </div>
+      <div class="checkbox-wrapper">
+        <label class="checkbox">
+          <input id="js-allBlock-input" type="checkbox" class="checkbox-input">
+          <span class="checkbox-symbol allBlock"></span>
+          <span class="checkbox-message">Block all images on all websites without exception</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="popup-category">
+      <button id="js-advancedOptions" class="button">Advanced options</button>
+    </div>
+
+  </div>
+
+  <script type="module" src="./popup.ts"></script>
+</body>
+
+</html>
