@@ -48,34 +48,34 @@ mobilenet_v4             **11.3**
 =======================  =========
 
 
-=======================  ============  =========  ========  ========
-Model                    Threshold     Precision  Recall    F1
-=======================  ============  =========  ========  ========
-squeezenet1.1-7          VERY_LOW      0.281      0.925     0.430
-squeezenet1.1-7          LOW           0.525      0.877     0.657
-squeezenet1.1-7          MEDIUM        0.640      0.848     0.729
-squeezenet1.1-7          HIGH          0.768      0.787     0.778
-squeezenet1.1-7          VERY_HIGH     0.827      0.743     0.783
-shufflenet-7             VERY_LOW      0.275      0.907     0.422
-shufflenet-7             LOW           0.535      0.835     0.652
-shufflenet-7             MEDIUM        0.642      0.790     0.709
-shufflenet-7             HIGH          0.747      0.703     0.724
-shufflenet-7             VERY_HIGH     0.818      0.642     0.720
-shufflenet-v2-10         VERY_LOW      0.400      0.965     0.565
-shufflenet-v2-10         LOW           0.681      0.917     0.782
-shufflenet-v2-10         MEDIUM        0.753      0.905     0.822
-shufflenet-v2-10         HIGH          0.825      0.873     0.848
-shufflenet-v2-10         VERY_HIGH     0.866      0.855     0.860
-efficientnet-lite4-11    VERY_LOW      0.802      0.963     0.875
-efficientnet-lite4-11    LOW           0.873      0.948     0.909
-efficientnet-lite4-11    MEDIUM        0.895      0.943     0.918
-efficientnet-lite4-11    HIGH          0.926      0.940     **0.933**
-efficientnet-lite4-11    VERY_HIGH     0.930      0.935     **0.933**
-mobilenet_v4             VERY_LOW      0.423      **0.975** 0.590
-mobilenet_v4             LOW           0.751      0.953     0.840
-mobilenet_v4             MEDIUM        0.836      0.932     0.882
-mobilenet_v4             HIGH          0.916      0.897     0.907
-mobilenet_v4             VERY_HIGH     **0.942**  0.855     0.896
-=======================  ============  =========  ========  ========
+=======================  ============  =========  ==========  ========
+Model                    Threshold     Precision  Recall      F1
+=======================  ============  =========  ==========  ========
+squeezenet1.1-7          VERY_LOW      0.281      0.925       0.430
+squeezenet1.1-7          LOW           0.525      0.877       0.657
+squeezenet1.1-7          MEDIUM        0.640      0.848       0.729
+squeezenet1.1-7          HIGH          0.768      0.787       0.778
+squeezenet1.1-7          VERY_HIGH     0.827      0.743       0.783
+shufflenet-7             VERY_LOW      0.275      0.907       0.422
+shufflenet-7             LOW           0.535      0.835       0.652
+shufflenet-7             MEDIUM        0.642      0.790       0.709
+shufflenet-7             HIGH          0.747      0.703       0.724
+shufflenet-7             VERY_HIGH     0.818      0.642       0.720
+shufflenet-v2-10         VERY_LOW      0.400      0.965       0.565
+shufflenet-v2-10         LOW           0.681      0.917       0.782
+shufflenet-v2-10         MEDIUM        0.753      0.905       0.822
+shufflenet-v2-10         HIGH          0.825      0.873       0.848
+shufflenet-v2-10         VERY_HIGH     0.866      0.855       0.860
+efficientnet-lite4-11    VERY_LOW      0.802      0.963       0.875
+efficientnet-lite4-11    LOW           0.873      0.948       0.909
+efficientnet-lite4-11    MEDIUM        0.895      0.943       0.918
+efficientnet-lite4-11    HIGH          0.926      0.940       **0.933**
+efficientnet-lite4-11    VERY_HIGH     0.930      0.935       **0.933**
+mobilenet_v4             VERY_LOW      0.423      **0.975**   0.590
+mobilenet_v4             LOW           0.751      0.953       0.840
+mobilenet_v4             MEDIUM        0.836      0.932       0.882
+mobilenet_v4             HIGH          0.916      0.897       0.907
+mobilenet_v4             VERY_HIGH     **0.942**  0.855       0.896
+=======================  ============  =========  ==========  ========
 
 The models mobilenet_v4 and efficientnet-lite4 have been selected for the web extension.
