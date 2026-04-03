@@ -1,3 +1,4 @@
+import {ExecutionProvider} from "@/common/ExecutionProvider";
 import {Risk} from "@/common/Risk";
 import {getRiskDescription, models, restoreOptions, restoreOptionsFromNewValue, saveOptions, type Options} from "@/options/commonOptions";
 import browser from "webextension-polyfill";
@@ -15,6 +16,9 @@ class OptionsManager {
 
   speedAccuracyTradeoffElement = document.getElementById('js-speedAccuracyTradeoffOption') as HTMLInputElement;
   speedAccuracyTradeoffValueElement = document.getElementById('js-speedAccuracyTradeoffValue')!;
+  executionProviderElement = document.getElementById('js-executionProviderOption') as HTMLInputElement;
+  executionProviderValueElement = document.getElementById('js-executionProviderValue')!;
+  executionProviderOrder = [ExecutionProvider.WEBGPU, ExecutionProvider.WASM];
   riskElement = document.getElementById('js-riskOption') as HTMLInputElement;
   riskValueElement = document.getElementById('js-riskValue')!;
 
@@ -29,11 +33,8 @@ class OptionsManager {
   allBlockElement = document.getElementById('js-allBlock-input') as HTMLInputElement;
   decisionCacheElement = document.getElementById('js-decisionCache-input') as HTMLInputElement;
   persistDecisionCacheElement = document.getElementById('js-persistDecisionCache-input') as HTMLInputElement;
-  displayLogsElement = document.getElementById('js-displayLogs-input') as HTMLInputElement;
   darkModeInputElement = document.getElementById('js-darkMode-input') as HTMLInputElement;
   darkModeMessageElement = document.getElementById('js-darkMode-message')!;
-  tmInputElement = document.getElementById('js-tm-input') as HTMLInputElement;
-  tmMessageElement = document.getElementById('js-tm-message')!;
 
   constructor(options: Options) {
     this.options = options;
@@ -149,6 +150,26 @@ class OptionsManager {
     }
   }
 
+  updateExecutionProviderView() {
+    switch (this.executionProviderOrder[parseInt(this.executionProviderElement.value)]) {
+      case ExecutionProvider.WEBGPU:
+        this.executionProviderValueElement.innerHTML = 'webgpu (faster, may vary by browser)';
+        break;
+      case ExecutionProvider.WASM:
+        this.executionProviderValueElement.innerHTML = 'wasm (more reliable)';
+        break;
+    }
+  }
+
+  async manageExecutionProvider() {
+    const executionProvider = this.executionProviderOrder[parseInt(this.executionProviderElement.value)];
+    if (executionProvider) {
+      this.options.executionProvider = executionProvider;
+      this.updateExecutionProviderView();
+      await saveOptions(this.options, true);
+    }
+  }
+
   updateRiskView() {
     this.riskValueElement.textContent = getRiskDescription(parseInt(this.riskElement.value));
   }
@@ -218,15 +239,6 @@ class OptionsManager {
     await saveOptions(this.options, true);
   }
 
-  updateDisplayLogsView() {
-    this.displayLogsElement.checked = this.options.doesShowLogs;
-  }
-
-  async manageDisplayLogs() {
-    this.options.doesShowLogs = this.displayLogsElement.checked;
-    await saveOptions(this.options, true);
-  }
-
   updateDarkModeView() {
     this.darkModeInputElement.checked = this.options.isDarkMode;
     if (this.darkModeInputElement.checked) {
@@ -246,21 +258,6 @@ class OptionsManager {
     this.updateDarkModeView();
   }
 
-  updateUnworthyView() {
-    this.tmInputElement.checked = !this.options.isUnworthy;
-    if (this.tmInputElement.checked) {
-      this.tmMessageElement.textContent = 'Surprises await Tibetan Mastiff lovers';
-    } else {
-      this.tmMessageElement.textContent = 'Even images of Tibetan Mastiff can be blocked';
-    }
-  }
-
-  async manageUnworthy() {
-    this.options.isUnworthy = !this.tmInputElement.checked;
-    await saveOptions(this.options, true);
-    this.updateUnworthyView();
-  }
-
   addEvents() {
     this.spiderLikeElement.addEventListener('click', () => this.manageSpiderLike());
     this.insectLikeElement.addEventListener('click', () => this.manageInsectLike());
@@ -268,6 +265,10 @@ class OptionsManager {
     this.speedAccuracyTradeoffElement.setAttribute('max', (models.length - 1).toString());
     this.speedAccuracyTradeoffElement.addEventListener('change', () => this.manageSpeedAccuracyTradeoff());
     this.speedAccuracyTradeoffElement.addEventListener('input', () => this.updateSpeedAccuracyTradeoffView());
+
+    this.executionProviderElement.setAttribute('max', (Object.keys(ExecutionProvider).length - 1).toString());
+    this.executionProviderElement.addEventListener('change', () => this.manageExecutionProvider());
+    this.executionProviderElement.addEventListener('input', () => this.updateExecutionProviderView());
 
     const riskValues: number[] = Object.values(Risk).filter(v => typeof v === 'number');
     this.riskElement.setAttribute('min', (Math.min(...riskValues)).toString());
@@ -289,11 +290,8 @@ class OptionsManager {
     this.allBlockElement.addEventListener('click', () => this.manageAllBlock());
     this.decisionCacheElement.addEventListener('click', () => this.manageDecisionCache());
     this.persistDecisionCacheElement.addEventListener('click', () => this.managePersistDecisionCache());
-    this.displayLogsElement.addEventListener('click', () => this.manageDisplayLogs());
     this.darkModeInputElement.addEventListener('click', () => this.manageDarkMode());
     this.darkModeMessageElement.addEventListener('click', () => this.darkModeInputElement.click());
-    this.tmInputElement.addEventListener('click', () => this.manageUnworthy());
-    this.tmMessageElement.addEventListener('click', () => this.tmInputElement.click());
 
     this.addFreeChoiceOptionEvents();
 
@@ -315,12 +313,14 @@ class OptionsManager {
     this.updateSpiderLikeView();
     this.updateInsectLikeView();
 
-    /* The spped/accuracy tradeoff and risk management must not be updated with the options values in the update view.
+    /* The spped/accuracy tradeoff, execution provider and risk management must not be updated with the options values in the update view.
      * The view is updated in the input event and saving options is done in the change event so as to avoid saving
      * options multiple times.
      */
     this.speedAccuracyTradeoffElement.value = this.options.modelIndex.toString();
     this.updateSpeedAccuracyTradeoffView();
+    this.executionProviderElement.value = this.executionProviderOrder.indexOf(this.options.executionProvider).toString();
+    this.updateExecutionProviderView();
     this.riskElement.value = this.options.risk.toString();
     this.updateRiskView();
 
@@ -332,9 +332,7 @@ class OptionsManager {
     this.updateAllBlockView();
     this.updateDecisionCacheView();
     this.updatePersistDecisionCacheView();
-    this.updateDisplayLogsView();
     this.updateDarkModeView();
-    this.updateUnworthyView();
 
     for (const checkbox of this.freeChoiceCheckboxes) {
       const wnid = checkbox.getAttribute('wnid')!;

@@ -1,4 +1,3 @@
-import {tmId} from "@/common/imageNetIds";
 import {getStateColor, State} from "@/common/state";
 import type {ImageManager} from "@/contentScript/ImageManager";
 import browser from "webextension-polyfill";
@@ -135,11 +134,7 @@ export class ImageInfo {
     if (this.isBlocked || this.isTemporaryBlocked) {
       this.unblock();
     } else {
-      if (!this.isTm || this.manager.options.isUnworthy || this.manager.options.wnidIndexes.includes(tmId.toString())) {
-        this.block();
-      } else {
-        alert('I\'m sorry but the Tibetan Mastiff is unblockable!\n(Can be disabled in the options)');
-      }
+      this.block();
     }
   }
 

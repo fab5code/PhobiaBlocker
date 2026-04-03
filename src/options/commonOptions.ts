@@ -1,3 +1,4 @@
+import {ExecutionProvider} from "@/common/ExecutionProvider";
 import {getIdFromWnid, getWnidFromId} from "@/common/imageNetClasses";
 import {PreprocessType, type MlModel} from "@/common/MlModel";
 import {Risk} from "@/common/Risk";
@@ -18,8 +19,7 @@ export interface StoredOptions {
   isDarkMode: boolean,
   doesUseDecisionCache: boolean,
   doesPersistDecisionCache: boolean,
-  doesShowLogs: boolean,
-  isUnworthy: boolean,
+  executionProvider: ExecutionProvider,
   wasChangedByOptionsManager: boolean
 };
 
@@ -62,8 +62,7 @@ export async function restoreOptions(): Promise<Options> {
     isDarkMode: true,
     doesUseDecisionCache: true,
     doesPersistDecisionCache: true,
-    doesShowLogs: true,
-    isUnworthy: false,
+    executionProvider: __BROWSER__ === 'chrome' ? ExecutionProvider.WEBGPU : ExecutionProvider.WASM,
     wasChangedByOptionsManager: false
   };
   const wnids = new Set(options.wnidIndexes.map(index => getWnidFromId(index)));
@@ -151,8 +150,8 @@ export async function updateOptions(): Promise<void> {
     options.doesPersistDecisionCache = true;
     doesNeedUpdate = true;
   }
-  if (!('doesShowLogs' in options)) {
-    options.doesShowLogs = false;
+  if (!('executionProvider' in options)) {
+    options.executionProvider = __BROWSER__ === 'chrome' ? ExecutionProvider.WEBGPU : ExecutionProvider.WASM;
     doesNeedUpdate = true;
   }
 

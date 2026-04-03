@@ -1,3 +1,4 @@
+import {ExecutionProvider} from "@/common/ExecutionProvider";
 import {spiderLikeIds} from "@/common/imageNetIds";
 import {PreprocessType} from "@/common/MlModel";
 import {getImageData} from "@/contentScript/imageDataHelper";
@@ -23,6 +24,7 @@ const models = [
     info: 'Most accurate'
   }
 ];
+const executionProvider = ExecutionProvider.WASM;
 
 interface BenchmarkPerformanceInfo {
   modelPreprocessingDuration: number,
@@ -129,7 +131,7 @@ class BenchmarkManager {
     }
 
     this.analyser.blockedIds = blockedIds;
-    await this.analyser.initSession(models[this.modelIndex]);
+    await this.analyser.initSession(models[this.modelIndex], executionProvider);
 
     // Heat up the model with one inference for nothing.
     await this.runAnalyse(images[0], {} as PerformanceInfo);
@@ -238,7 +240,7 @@ async function testModel(modelIndex: number) {
   await benchmark.runModel(blockedIds);
 }
 
-// for (let i = 0; i < models.length; i++) {
-//   await testModel(i);
-// }
-await testModel(3);
+for (let i = 0; i < models.length; i++) {
+  await testModel(i);
+}
+// await testModel(0);

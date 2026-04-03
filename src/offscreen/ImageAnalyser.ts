@@ -1,3 +1,4 @@
+import {ExecutionProvider} from "@/common/ExecutionProvider";
 import {tmId} from "@/common/imageNetIds";
 import {PreprocessType, type MlModel} from "@/common/MlModel";
 import {MODEL_SIZE} from "@/contentScript/imageDataHelper";
@@ -28,17 +29,12 @@ export class ImageAnalyser {
   private imagesWaitingForModelAnalyse: WaitingForModelAnalyseImage[] = [];
   private model!: MlModel;
 
-  async initSession(model: MlModel) {
+  async initSession(model: MlModel, executionProvider: ExecutionProvider) {
     this.isSessionReady = false;
     this.model = model;
 
-    console.log('start init session with model', model)
-    this.session = await ort.InferenceSession.create(this.model.path, {
-      executionProviders: ["webgpu", "wasm"]
-    });
+    this.session = await ort.InferenceSession.create(this.model.path, {executionProviders: [executionProvider]});
     this.isSessionReady = true;
-
-    console.log('session was initialized with model', model)
 
     // TODO: maybe should not await here (by creating a new function called after initSession without await)
     for (const imageInfo of this.imagesWaitingForModelAnalyse) {
@@ -93,17 +89,6 @@ export class ImageAnalyser {
         break;
       }
     }
-
-    // const output = new Float32Array(3 * height * width);
-    // for (let i = 0; i < width * height; i++) {
-    //   const r = data[i * 4] / 255;
-    //   const g = data[i * 4 + 1] / 255;
-    //   const b = data[i * 4 + 2] / 255;
-
-    //   output[i] = (r - 0.485) / 0.229;
-    //   output[i + width * height] = (g - 0.456) / 0.224;
-    //   output[i + 2 * width * height] = (b - 0.406) / 0.225;
-    // }
 
     perfoInfo.modelPreprocessingDuration = performance.now() - beforeModelPreprocessTime;
 

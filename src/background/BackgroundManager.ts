@@ -12,22 +12,17 @@ export class BackgroundManager {
   }
 
   async init() {
-    console.log('global: init')
     await this.updateFromOptions(true);
-    console.log('global: update from options')
     this.addBrowserEventListeners();
-    console.log('global: browser event listener')
     this.addBrowserContextMenu();
-    console.log('global: context menu')
-    await this.setOffscreenDocument();
-    console.log('global: offscreen established');
+    if (__BROWSER__ === "chrome") {
+      await this.setOffscreenDocument();
+    }
   }
 
   async updateFromOptions(isInitialization: boolean, hasResumedOrPaused?: boolean, hasTrustedWebsitesChanged?: boolean) {
     if (isInitialization || hasResumedOrPaused || hasTrustedWebsitesChanged) {
-      console.log('global: before get tabs')
       const tabs = await browser.tabs.query({active: true, currentWindow: true})
-      console.log('global: tabs', tabs)
       if (tabs && tabs[0]) {
         await this.updateCurrentTabTitleAndIcon(tabs[0].id!);
       }
@@ -57,7 +52,6 @@ export class BackgroundManager {
       if (changeInfo.status === 'loading') {
         const tabs = await browser.tabs.query({active: true, currentWindow: true});
         if (tabs && tabs[0]) {
-          console.log('tabs.onUpdated listener', tabId, tabs[0].id)
           await this.updateCurrentTabTitleAndIcon(tabs[0].id!);
         }
       }
@@ -75,10 +69,9 @@ export class BackgroundManager {
         hasTrustedWebsitesChanged = changes.options.oldValue.trustedUrlRegexes !== changes.options.newValue.trustedUrlRegexes;
       }
       await this.updateFromOptions(false, hasResumedOrPaused, hasTrustedWebsitesChanged);
-      await browser.runtime.sendMessage<ExtensionMessage>({
-        message: MessageType.UPDATE_OPTIONS,
-        options: this.options
-      });
+      if (__BROWSER__ === 'chrome') {
+        await browser.runtime.sendMessage<ExtensionMessage>({message: MessageType.UPDATE_OPTIONS, options: this.options});
+      }
     };
     browser.storage.onChanged.addListener(onOptionsChangedFunction);
     // Firefox needs to have the listener removed otherwise an error is thrown in the console.
@@ -91,7 +84,6 @@ export class BackgroundManager {
     });
 
     browser.runtime.onMessage.addListener((request: unknown, sender: any) => {
-      console.log("global: message", request);
       if (!isExtensionMessage(request)) {
         return;
       }
@@ -128,21 +120,13 @@ export class BackgroundManager {
 
   async setOffscreenDocument(): Promise<void> {
     const url = browser.runtime.getURL('src/offscreen/offscreen.html');
-
-    const existingContexts = await chrome.runtime.getContexts({
-      contextTypes: ["OFFSCREEN_DOCUMENT"],
-      documentUrls: [url]
-    });
-
-    if (existingContexts.length > 0) {
-      return;
+    const existingContexts = await chrome.runtime.getContexts({contextTypes: ["OFFSCREEN_DOCUMENT"], documentUrls: [url]});
+    if (existingContexts.length === 0) {
+      await chrome.offscreen.createDocument({
+        url: 'src/offscreen/offscreen.html',
+        reasons: ["DOM_PARSER"],
+        justification: "Run DOM-based processing"
+      });
     }
-    console.log('no offscreen document loaded')
-
-    await chrome.offscreen.createDocument({
-      url: 'src/offscreen/offscreen.html',
-      reasons: ["DOM_PARSER"],
-      justification: "Run DOM-based processing"
-    });
   }
 }

@@ -13870,12 +13870,20 @@
         <div class="option">
           <h1 class="option-name">Tradeoffs</h1>
           <div>
-            <label class="option-instruction" for="js-speedAccuracyTradeoffOption">Speed/Accuracy tradeoff
-              of the
-              blocking model</label>
+            <label class="option-instruction" for="js-speedAccuracyTradeoffOption">
+              Speed/Accuracy tradeoff of the blocking model
+            </label>
             <input id="js-speedAccuracyTradeoffOption" type="range" min="0" max="0" step="1"
               name="speed accuracy tradeoff">
             <span id="js-speedAccuracyTradeoffValue" class="speedAccuracyTradeoffValue"></span>
+          </div>
+
+          <div>
+            <label class="option-instruction" for="js-executionProviderOption">
+              Computation method
+            </label>
+            <input id="js-executionProviderOption" type="range" min="0" max="0" step="1" name="execution provider">
+            <span id="js-executionProviderValue" class="executionProviderValue"></span>
           </div>
 
           <div>
@@ -13982,27 +13990,12 @@
                 <b>[Recommended]</b></span>
             </label>
           </div>
-          <div class="checkbox-wrapper">
-            <label class="checkbox">
-              <input id="js-displayLogs-input" type="checkbox" class="checkbox-input">
-              <span class="checkbox-symbol"></span>
-              <span class="checkbox-message">Display some performance logs in the inspect view of the
-                extension</span>
-            </label>
-          </div>
           <div class="switch-wrapper">
             <label class="switch">
               <input id="js-darkMode-input" type="checkbox" class="switch-input" checked>
               <span class="switch-slider darkMode"></span>
             </label>
             <span id="js-darkMode-message" class="switch-message"></span>
-          </div>
-          <div class="switch-wrapper">
-            <label class="switch">
-              <input id="js-tm-input" type="checkbox" class="switch-input" checked>
-              <span class="switch-slider tm"></span>
-            </label>
-            <span id="js-tm-message" class="switch-message"></span>
           </div>
         </div>
 

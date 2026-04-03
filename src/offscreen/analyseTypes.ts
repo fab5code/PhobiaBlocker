@@ -1,6 +1,7 @@
 import type {RiskAssessment} from "@/offscreen/RiskAssessment"
 
 export interface PerformanceInfo {
+  centerCropDuration: number,
   modelPreprocessingDuration: number,
   modelRunDuration: number,
   decisionDuration: number,

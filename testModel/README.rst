@@ -20,7 +20,7 @@ Generate imageManifest.json that lists each image path and class.
 
   $ python testModel/generateImageManifest.py
 
-Modify testModel.ts with the models to test information.
+Modify testModel.ts with the models and the execution provider.
 
 Run the server.
 
@@ -35,7 +35,11 @@ Results
 
 The benchmark was done on the classes used when the option *spider like* is activated in PhobiaBlocker.
 So those results measure how good the models are to detect spider like images from an imagenet1k dataset.
-The models were run with the execution provider webgpu with wasm as a fallback.
+
+Chrome
+^^^^^^
+
+The models are run with the execution provider webgpu on chrome.
 
 =======================  =========
 Model                    Run (ms)
@@ -46,7 +50,6 @@ shufflenet-v2-10         16.5
 efficientnet-lite4-11    20.5
 mobilenet_v4             **11.3**
 =======================  =========
-
 
 =======================  ============  =========  ==========  ========
 Model                    Threshold     Precision  Recall      F1
@@ -79,3 +82,15 @@ mobilenet_v4             VERY_HIGH     **0.942**  0.855       0.896
 =======================  ============  =========  ==========  ========
 
 The models mobilenet_v4 and efficientnet-lite4 have been selected for the web extension.
+
+Firefox
+^^^^^^^
+
+The models are run with the execution provider wasm on firefox. With webgpu, the models are a lot slower.
+
+=======================  =========
+Model                    Run (ms)
+=======================  =========
+efficientnet-lite4-11    137.8
+mobilenet_v4             **30.3**
+=======================  =========

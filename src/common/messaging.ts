@@ -1,4 +1,5 @@
 import type {Risk} from "@/common/Risk";
+import type {PerformanceInfo} from "@/offscreen/analyseTypes";
 import type {StoredOptions} from "@/options/commonOptions";
 
 export enum MessageType {
@@ -23,7 +24,8 @@ interface AnalyseFromDataMessage {
   message: MessageType.ANALYSE_FROM_DATA,
   data: number[],
   width: number,
-  height: number
+  height: number,
+  perfoInfo: PerformanceInfo
 }
 
 interface AnalyseFromSrcMessage {

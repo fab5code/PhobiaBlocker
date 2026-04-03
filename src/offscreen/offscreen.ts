@@ -9,6 +9,5 @@ async function main() {
   const options = restoreOptionsFromNewValue(response.storedOptions);
   offscreenManager = new OffscreenManager(options);
   await offscreenManager.init();
-  console.log("offscreen: offscreenManager init done")
 }
 main();

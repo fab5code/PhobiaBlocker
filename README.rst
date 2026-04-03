@@ -19,4 +19,4 @@ or
 
   $ npm run build
 
-Then go to `chrome://extensions/ <chrome://extensions/>`__ and *load unpacked* the folder *dist*.
+Then go to *chrome://extensions/* and *load unpacked* the folder *dist*.

@@ -5,7 +5,6 @@ import browser from "webextension-polyfill";
 
 function addBrowserEventListenersBeforeOptionsRestoring() {
   browser.runtime.onMessage.addListener((request: unknown) => {
-    console.log('content script onMessage', request)
     if (!isExtensionMessage(request)) {
       return;
     }

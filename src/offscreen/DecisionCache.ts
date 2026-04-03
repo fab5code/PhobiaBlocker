@@ -56,7 +56,7 @@ export class DecisionCache {
       cursorReq.onerror = () => reject(cursorReq.error);
     });
 
-    console.log('decision cache:', this.cache.size, 'keys');
+    console.log('Restored decision cache with', this.cache.size, 'keys.');
 
     this.isReady = true;
   }

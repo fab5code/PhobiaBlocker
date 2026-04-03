@@ -4,6 +4,7 @@ import {isExtensionMessage, MessageType, type AnalyseResponse, type BlockUnblock
 import {getImageData, MIN_IMAGE_WIDTH_AND_HEIGHT} from "@/contentScript/imageDataHelper";
 import {ImageInfo, isSvgImageElement} from "@/contentScript/ImageInfo";
 import {PopupHelper} from "@/contentScript/PopupHelper";
+import type {PerformanceInfo} from "@/offscreen/analyseTypes";
 import {getRiskAssessmentDescription, isUrlTrusted, restoreOptionsFromNewValue, type Options} from "@/options/commonOptions";
 import browser from "webextension-polyfill";
 
@@ -83,7 +84,7 @@ export class ImageManager {
   }
 
   static isCorsSensitive(imageSrc: string) {
-    if (navigator.userAgent.includes("Firefox")) {
+    if (__BROWSER__ === "firefox") {
       /* On firefox content script can also make cors requests with the right permission.
        * On chrome only background can do cors requests with the right permission
        */
@@ -99,7 +100,6 @@ export class ImageManager {
 
   async init() {
     this.isWebsiteTrusted = isUrlTrusted(this.options, ImageManager.getUrl());
-    console.log('isWebsiteTrusted', this.isWebsiteTrusted)
     this.updateRegexes();
     await this.popupHelper.resetPopupInfo();
     this.addBrowserEventListeners();
@@ -279,7 +279,6 @@ export class ImageManager {
 
     if (this.hasNothingToAutomaticBlock() || !image.src) {
       await this.unblockImageAsAnalysed(image);
-      console.log('unblock image as analysed')
       return;
     }
 
@@ -391,28 +390,31 @@ export class ImageManager {
       }
 
       let imageData: ImageData;
+      const perfoInfo = {} as PerformanceInfo;
       try {
+        const beforeCenterCropTime = performance.now();
         imageData = await getImageData(imageObject, imageObject.width, imageObject.height);
+        perfoInfo.centerCropDuration = performance.now() - beforeCenterCropTime;
       } catch (error) {
         this.nbImagesInAnalyse--;
         this.afterImageAnalyseCallback(); // Do not await here.
         this.unblockImageAsFailed(image);
         return;
       }
-      this.requestAnalyse(image, imageData, id);
+      this.requestAnalyse(image, imageData, id, perfoInfo);
     };
     imageObject.src = image.src!;
   }
 
-  async requestAnalyse(image: ImageInfo, imageData: ImageData, id: number) {
-    console.log('analyse image', id)
+  async requestAnalyse(image: ImageInfo, imageData: ImageData, id: number, perfoInfo: PerformanceInfo) {
     let response: AnalyseResponse | null = null;
     try {
       response = await browser.runtime.sendMessage<ExtensionMessage, AnalyseResponse>({
         message: MessageType.ANALYSE_FROM_DATA,
         data: Array.from(imageData.data),
         width: imageData.width,
-        height: imageData.height
+        height: imageData.height,
+        perfoInfo: perfoInfo
       });
     } catch (error) {
     }
@@ -430,7 +432,6 @@ export class ImageManager {
     }
     this.nbImagesInAnalyse++;
 
-    console.log('analyse image from src', id)
     let response: AnalyseResponse | null = null;
     try {
       response = await browser.runtime.sendMessage<ExtensionMessage, AnalyseResponse>({
@@ -445,8 +446,6 @@ export class ImageManager {
   async processAnalyse(image: ImageInfo, id: number, response: AnalyseResponse | null) {
     this.nbImagesInAnalyse--;
     this.afterImageAnalyseCallback(); // Do not await here.
-
-    console.log('image processed', id)
 
     if (this.shouldStopProcess(image, id)) {
       return;
@@ -478,7 +477,7 @@ export class ImageManager {
     if (decision.isTm) {
       image.isTm = true;
       this.nbTm++;
-      if (!this.options.isUnworthy && !this.options.wnidIndexes.includes(tmId.toString())) {
+      if (!this.options.wnidIndexes.includes(tmId.toString())) {
         await this.popupHelper.updateTmInPopup(true);
       }
     }

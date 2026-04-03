@@ -81,3 +81,6 @@ cover/
 
 # Virtual environment
 .venv/
+
+# ML models
+public/model/

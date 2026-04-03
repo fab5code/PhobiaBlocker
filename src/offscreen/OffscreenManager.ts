@@ -14,6 +14,7 @@ interface RequestAnalyseInfo {
   imageInfo: AnalyseImageInfo,
   cacheKey: string | null,
   isLabelInProcess: boolean,
+  perfoInfo: PerformanceInfo,
   resolve: (result: {decision: Decision}) => void
 }
 
@@ -44,15 +45,12 @@ export class OffscreenManager {
 
   async init() {
     await this.updateFromOptions(true);
-    console.log('offscreen: update from options')
     this.addBrowserEventListeners();
-    console.log('offscreen: browser event listener set')
-    console.log('offscreen: this.maxNbImagesInProcess', this.maxNbImagesInProcess)
     await this.decisionCache.init();
   }
 
-  async updateFromOptions(isInitialization: boolean, hasModelChanged?: boolean, hasDecisionCacheDeactivated?: boolean,
-    doesNotPersistDecisionCacheAnymore?: boolean) {
+  async updateFromOptions(isInitialization: boolean, hasModelChanged?: boolean, hasExecutionProviderChanged?: boolean,
+    hasDecisionCacheDeactivated?: boolean, doesNotPersistDecisionCacheAnymore?: boolean) {
     const newBlockedIds = new Set<string>();
     this.options.wnidIndexes.forEach(newBlockedIds.add, newBlockedIds);
     if (this.options.spiderLike) {
@@ -72,49 +70,55 @@ export class OffscreenManager {
       this.decisionCache.clearPersistence();
     }
 
-    // this.analyser.session = null;
-
-    if (isInitialization || hasModelChanged || this.analyser.session === null) {
-      console.log('offscreen: start init', models[this.options.modelIndex]);
-      await this.analyser.initSession(models[this.options.modelIndex]);
-
-      if (this.options.doesShowLogs) {
-        console.log('Session with Machine Learning model', models[this.options.modelIndex].name, 'ready');
-      }
+    if (isInitialization || hasModelChanged || hasExecutionProviderChanged || this.analyser.session === null) {
+      await this.analyser.initSession(models[this.options.modelIndex], this.options.executionProvider);
+      console.log('Session with Machine Learning model', models[this.options.modelIndex].name, 'in', this.options.executionProvider, 'ready');
     }
   }
 
   async updateOptions(newStoredOptions: StoredOptions) {
-    console.log('offscreen: update options')
     const newOptions = restoreOptionsFromNewValue(newStoredOptions);
     const hasModelChanged = this.options.modelIndex !== newOptions.modelIndex;
+    const hasExecutionProviderChanged = this.options.executionProvider !== newOptions.executionProvider;
     const hasDecisionCacheDeactivated = this.options.doesUseDecisionCache && !newOptions.doesUseDecisionCache;
     const doesNotPersistDecisionCacheAnymore = this.options.doesPersistDecisionCache && !newOptions.doesPersistDecisionCache;
     this.options = newOptions;
-    await this.updateFromOptions(false, hasModelChanged, hasDecisionCacheDeactivated, doesNotPersistDecisionCacheAnymore);
+    await this.updateFromOptions(false, hasModelChanged, hasExecutionProviderChanged, hasDecisionCacheDeactivated, doesNotPersistDecisionCacheAnymore);
   }
 
   addBrowserEventListeners() {
     browser.runtime.onMessage.addListener((request: unknown) => {
-      console.log('offscreen:', request)
       if (!isExtensionMessage(request)) {
         return;
       }
       switch (request.message) {
         case MessageType.ANALYSE_FROM_DATA:
-          return Promise.resolve(this.analyseImageFromData({data: new Uint8Array(request.data), width: request.width, height: request.height}, false));
+          return Promise.resolve(this.analyseImageFromData({data: new Uint8Array(request.data), width: request.width, height: request.height},
+            false, request.perfoInfo));
         case MessageType.ANALYSE_FROM_SRC:
           return Promise.resolve(this.analyseImageFromSrc(request.src));
-        case MessageType.UPDATE_OPTIONS:
-          return Promise.resolve(this.updateOptions(request.options));
+      }
+      if (__BROWSER__ === 'chrome' && request.message === MessageType.UPDATE_OPTIONS) {
+        return Promise.resolve(this.updateOptions(request.options));
       }
     });
+
+    if (__BROWSER__ === 'firefox') {
+      const onOptionsChangedFunction = async (changes: any) => {
+        if (!changes.options) {
+          return;
+        }
+        await this.updateOptions(changes.options.newValue);
+      };
+      browser.storage.onChanged.addListener(onOptionsChangedFunction);
+    }
   }
 
-  printPerfoInfo(perfoInfo: PerformanceInfo) {
-    const total = perfoInfo.modelPreprocessingDuration + perfoInfo.modelRunDuration + perfoInfo.decisionDuration;
-    console.log('Total', total.toFixed(1) + 'ms', 'modelPrep', perfoInfo.modelPreprocessingDuration.toFixed(1) + 'ms',
-      'run', perfoInfo.modelRunDuration.toFixed(1) + 'ms', 'decision', perfoInfo.decisionDuration.toFixed(1) + 'ms', 'Proba', perfoInfo.probability.toFixed(2));
+  logPerfoInfo(perfoInfo: PerformanceInfo) {
+    const total = perfoInfo.centerCropDuration + perfoInfo.modelPreprocessingDuration + perfoInfo.modelRunDuration + perfoInfo.decisionDuration;
+    console.log('Total', total.toFixed(1) + 'ms', 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms',
+      'modelPrep', perfoInfo.modelPreprocessingDuration.toFixed(1) + 'ms', 'run', perfoInfo.modelRunDuration.toFixed(1) + 'ms',
+      'decision', perfoInfo.decisionDuration.toFixed(1) + 'ms', 'Proba', perfoInfo.probability.toFixed(2));
   }
 
   isAutomaticBlockPaused() {
@@ -127,7 +131,7 @@ export class OffscreenManager {
     this.imagesWaitingForAnalyse = [];
   }
 
-  async analyseImageFromData(imageInfo: AnalyseImageInfo, isLabelInProcess: boolean): Promise<{decision: Decision}> {
+  async analyseImageFromData(imageInfo: AnalyseImageInfo, isLabelInProcess: boolean, perfoInfo: PerformanceInfo): Promise<{decision: Decision}> {
     return new Promise(async (resolve) => {
       if (this.analyser.blockedIds.size === 0) {
         resolve({decision: {isValid: true, risk: RiskAssessment.NONE}});
@@ -144,6 +148,7 @@ export class OffscreenManager {
         const cacheDecision = cacheKey ? this.decisionCache.getDecision(cacheKey) : null;
         if (cacheDecision) {
           resolve({decision: {isValid: true, risk: cacheDecision.risk, isTm: cacheDecision.isTm}});
+          console.log('Cache hit', cacheDecision, 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms');
           if (isLabelInProcess) {
             this.nbImagesInProcess--;
             await this.afterProcessImageCallback();
@@ -151,7 +156,7 @@ export class OffscreenManager {
           return;
         }
       }
-      const result = await this.tryAnalyseImage(imageInfo, cacheKey, isLabelInProcess);
+      const result = await this.tryAnalyseImage(imageInfo, cacheKey, isLabelInProcess, perfoInfo);
       resolve(result);
     });
   }
@@ -161,7 +166,7 @@ export class OffscreenManager {
       return;
     }
     const requestInfo = this.imagesWaitingForAnalyse.shift()!;
-    const result = await this.tryAnalyseImage(requestInfo.imageInfo, requestInfo.cacheKey, requestInfo.isLabelInProcess);
+    const result = await this.tryAnalyseImage(requestInfo.imageInfo, requestInfo.cacheKey, requestInfo.isLabelInProcess, requestInfo.perfoInfo);
     requestInfo.resolve(result);
     await this.afterAnalyseImageCallback();
   }
@@ -170,7 +175,8 @@ export class OffscreenManager {
     return !this.isAnalyserWorking;
   }
 
-  tryAnalyseImage(imageInfo: AnalyseImageInfo, cacheKey: string | null, isLabelInProcess: boolean): Promise<{decision: Decision}> {
+  tryAnalyseImage(imageInfo: AnalyseImageInfo, cacheKey: string | null, isLabelInProcess: boolean,
+    perfoInfo: PerformanceInfo): Promise<{decision: Decision}> {
     return new Promise(async (resolve) => {
       if (this.isAutomaticBlockPaused()) {
         this.clearPausedAutomaticBlock();
@@ -178,21 +184,24 @@ export class OffscreenManager {
       }
 
       if (!this.canAnalyseImageNow()) {
-        this.imagesWaitingForAnalyse.push({imageInfo: imageInfo, resolve: resolve, cacheKey: cacheKey, isLabelInProcess: isLabelInProcess});
+        this.imagesWaitingForAnalyse.push({
+          imageInfo: imageInfo,
+          cacheKey: cacheKey,
+          isLabelInProcess: isLabelInProcess,
+          perfoInfo: perfoInfo,
+          resolve: resolve
+        });
         return;
       }
 
       this.isAnalyserWorking = true;
-      const perfoInfo = {} as PerformanceInfo;
       const decision = await this.analyser.analyseImage(imageInfo.data, imageInfo.width, imageInfo.height, perfoInfo);
 
       resolve({decision: decision});
 
       this.isAnalyserWorking = false;
       await this.decisionCache.set(cacheKey, {risk: decision.risk!, isTm: decision.isTm!});
-      if (this.options.doesShowLogs) {
-        this.printPerfoInfo(perfoInfo);
-      }
+      this.logPerfoInfo(perfoInfo);
       await this.afterAnalyseImageCallback();
       if (isLabelInProcess) {
         this.nbImagesInProcess--;
@@ -209,7 +218,6 @@ export class OffscreenManager {
       }
 
       if (this.nbImagesInProcess >= this.maxNbImagesInProcess) {
-        console.log('image waiting for process', src)
         this.imagesWaitingForProcess.push({src: src, resolve: resolve});
         return;
       }
@@ -219,24 +227,23 @@ export class OffscreenManager {
       const imageObject = new Image();
       imageObject.crossOrigin = '';
       imageObject.onerror = () => {
-        console.log('error on image load')
         resolve({decision: {isValid: false}});
         this.nbImagesInProcess--;
         this.afterProcessImageCallback();
       };
       imageObject.onload = async () => {
-        console.log('loaded image', src)
         if (imageObject.width <= MIN_IMAGE_WIDTH_AND_HEIGHT || imageObject.height <= MIN_IMAGE_WIDTH_AND_HEIGHT) {
-          console.log('loaded image too small')
           resolve({decision: {isValid: true, isIgnored: true}});
           this.nbImagesInProcess--;
           this.afterProcessImageCallback();
         }
         let imageData: ImageData;
+        const perfoInfo = {} as PerformanceInfo;
         try {
+          const beforeCenterCropTime = performance.now();
           imageData = await getImageData(imageObject, imageObject.width, imageObject.height);
+          perfoInfo.centerCropDuration = performance.now() - beforeCenterCropTime;
         } catch (error) {
-          console.log('could not resize center crop loaded image')
           resolve({decision: {isValid: false}});
           this.nbImagesInProcess--;
           this.afterProcessImageCallback();
@@ -246,8 +253,7 @@ export class OffscreenManager {
           data: new Uint8Array(imageData.data.buffer),
           width: imageData.width,
           height: imageData.height
-        }, true);
-        console.log('analysed loaded image', result)
+        }, true, perfoInfo);
         resolve(result);
       };
       imageObject.src = src;
