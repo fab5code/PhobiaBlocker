@@ -15,11 +15,12 @@
   <div class="optionPageWrapper">
     <div class="optionPage">
 
-      <div class="logoAndTitle"><img id="js-logo" class="logo medium" src="../../img/logo_darkMode.svg"
-          alt="PhobiaBlocker Logo"></div>
+      <div class="logoAndTitle">
+        <img id="js-logo" class="logo medium" src="../../img/logo_darkMode.svg" alt="PhobiaBlocker Logo">
+      </div>
 
       <div class="options">
-        <div class="option">
+        <section class="option">
           <h1 class="option-name">Decide what to block</h1>
 
           <input id="js-spiderLikeOption" type="checkbox" name="spider-like option">
@@ -13867,9 +13868,9 @@
 
             </ul>
           </div>
-        </div>
+        </section>
 
-        <div class="option">
+        <section class="option">
           <h1 class="option-name">Tradeoffs</h1>
           <div>
             <label class="option-instruction" for="js-speedAccuracyTradeoffOption">
@@ -13893,9 +13894,9 @@
             <input id="js-riskOption" type="range" min="0" max="0" step="1" name="risk management">
             <span id="js-riskValue" class="riskValue"></span>
           </div>
-        </div>
+        </section>
 
-        <div class="option">
+        <section class="option">
           <h1 class="option-name">Regexes to automatically trust or block</h1>
           <div class="regexes trust">
             <h2 class="option-subName trust">Trust pages using their url</h2>
@@ -13956,9 +13957,9 @@
             <textarea id="js-trustedRegexes" rows="4" name="Regexes to unblock images using their src" placeholder=""
               class="regexes-textArea"></textarea>
           </div>
-        </div>
+        </section>
 
-        <div class="option">
+        <section class="option">
           <h1 class="option-name">Miscellaneous</h1>
 
           <div class="checkbox-wrapper">
@@ -13999,64 +14000,63 @@
             </label>
             <span id="js-darkMode-message" class="switch-message"></span>
           </div>
-        </div>
+        </section>
 
-        <div class="option-description">
+        <section class="option-description">
           <h1 class="option-name">Description</h1>
+
           <p class="option-descriptionText">
-            PhobiaBlocker blocks scary images of your phobia.
+            PhobiaBlocker blocks images related to your phobia.
           </p>
 
           <h2 class="option-descriptionSubtitle">Features</h2>
           <ul class="option-descriptionList">
             <li>
-              Automatically block images representing physical things you chose
+              Automatically block images representing real-world objects you have chosen
             </li>
             <li>
-              Manually block or unblock images with a right-click
+              Manually block or unblock images using the right-click menu
             </li>
             <li>
-              Block all images on all websites
+              Block all images across all websites
             </li>
             <li>
-              Automatically block or trust (for performance saving) images whose src matches a given regex
-              (blocking has
-              priority)
+              Automatically block or trust (to improve performance) images whose src matches a specified regex (blocking
+              takes priority)
             </li>
             <li>
-              Add trusted pages (for performance saving) whose url matches a given regex
+              Add trusted websites (domain name with subdomain) to improve performance
             </li>
           </ul>
 
           <h2 class="option-descriptionSubtitle">Options</h2>
           <ul class="option-descriptionList">
             <li>
-              Quick selection to block spider-like and insect-like images
+              Quick option to block spider-like and insect-like images
             </li>
             <li>
-              Advanced selection from a long list of physical things
+              Advanced selection from a long list of real-world objects
             </li>
             <li>
-              Speed/Accuracy tradeoff of the automatic blocker
+              Speed/Accuracy trade-off of the automatic blocker
             </li>
             <li>
               Risk management of the automatic blocker
             </li>
             <li>
-              Add or remove a regex to automatically trust pages using their url, trust or block images
-              using their src
+              Add or remove regex rules to automatically trust or block images using their src
             </li>
             <li>
-              Label trusted websites from the popup
-            </li>
-            <li>
-              Pause the automatic blocker (manual blocking is still enabled)
+              Pause the automatic blocker (manual blocking remains enabled)
             </li>
             <li>
               Block all images on all websites without exception
             </li>
             <li>
-              Enable dark or light mode (dark mode by default)
+              Enable dark or light mode (dark mode is enabled by default)
+            </li>
+            <li>
+              Label trusted websites from the popup menu
             </li>
           </ul>
 
@@ -14066,8 +14066,7 @@
               No browsing data is sent to an external endpoint
             </li>
             <li>
-              Images are analysed on your computer but they are not saved in any way except after
-              transformation in a
+              Images are analysed on your computer but they are not saved, except in a transformed form within a local
               cache that can be disabled in the options
             </li>
           </ul>
@@ -14075,45 +14074,29 @@
           <h2 class="option-descriptionSubtitle">Technical details and restrictions</h2>
           <ul class="option-descriptionList">
             <li>
-              Machine Learning models for imagenet classification are used to analyse images. The list of
-              things to
-              block comes from imagenet classes. This is why only physical things are available. For
-              instance blocking
-              abstract phobia like fear of heights or gore is not supported.
+              Machine learning models for ImageNet classification are used to analyse images. The list of things to
+              block comes from ImageNet classes. This is why only real-world objects are supported. For instance,
+              blocking abstract phobias like heights or gore is not supported.
             </li>
             <li>
-              Are analysed &lt;img&gt; and svg elements &lt;image&gt;. When a new image is added to the
-              DOM or is
-              changing, the element is also analysed. Images from canvas and css property background-image
-              are not
-              supported.
+              The extension analyses &lt;img&gt; and SVG &lt;image&gt; elements. When a new image is added to the DOM or
+              changes, the element is analysed as well. Images from &lt;canvas&gt; elements and the CSS background-image
+              property are not supported.
             </li>
             <li>
-              Images too small to be analysed are ignored.
+              Images are temporarily blocked before they are analysed. Images can blink before being temporarily blocked
+              in rare cases.
             </li>
             <li>
-              Images are first temporary blocked before they are analysed. Images can blink before being
-              temporary
-              blocked in very rare cases.
+              Most of the extension's size is due to the machine learning models and the library to execute them.
             </li>
             <li>
-              Around 99% of the size of the extension comes from the Machine Learning models and the
-              library to execute
-              them.
-            </li>
-            <li>
-              A cache of the automatic blocker decisions is used and is persisted locally. The cache
-              contains non
-              cryptographic hashes of images and takes at most less than 1MB. Both the cache and its
-              persistence can be
+              The automatic blocker uses a cache of decisions, which can be stored locally or used only temporarily. The
+              cache contains non-cryptographic hashes of images. Both the cache and its persistence mechanism can be
               disabled in the options.
             </li>
           </ul>
-
-          <p class="option-descriptionText">
-            As a bonus a little surprise for Tibetan Mastiff lovers! (Can be disabled in the options)
-          </p>
-        </div>
+        </section>
 
       </div>
     </div>
