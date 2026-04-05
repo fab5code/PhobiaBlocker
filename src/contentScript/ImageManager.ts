@@ -1,6 +1,6 @@
 import {getMaxNbImagesInAnalyse} from "@/common/concurrency";
 import {tmId} from "@/common/imageNetIds";
-import {isExtensionMessage, MessageType, type AnalyseResponse, type BlockUnblockMessage, type ExtensionMessage} from "@/common/messaging";
+import {isExtensionMessage, MessageType, sendMessageWithReadiness, type AnalyseResponse} from "@/common/messaging";
 import {getImageData, MIN_IMAGE_WIDTH_AND_HEIGHT} from "@/contentScript/imageDataHelper";
 import {ImageInfo, isSvgImageElement} from "@/contentScript/ImageInfo";
 import {PopupHelper} from "@/contentScript/PopupHelper";
@@ -409,13 +409,13 @@ export class ImageManager {
   async requestAnalyse(image: ImageInfo, imageData: ImageData, id: number, perfoInfo: PerformanceInfo) {
     let response: AnalyseResponse | null = null;
     try {
-      response = await browser.runtime.sendMessage<ExtensionMessage, AnalyseResponse>({
+      response = await sendMessageWithReadiness<AnalyseResponse>({
         message: MessageType.ANALYSE_FROM_DATA,
         data: Array.from(imageData.data),
         width: imageData.width,
         height: imageData.height,
         perfoInfo: perfoInfo
-      });
+      }, true);
     } catch (error) {
     }
     await this.processAnalyse(image, id, response);
@@ -434,10 +434,10 @@ export class ImageManager {
 
     let response: AnalyseResponse | null = null;
     try {
-      response = await browser.runtime.sendMessage<ExtensionMessage, AnalyseResponse>({
+      response = await sendMessageWithReadiness<AnalyseResponse>({
         message: MessageType.ANALYSE_FROM_SRC,
         src: image.src!
-      });
+      }, true);
     } catch (error) {
     }
     await this.processAnalyse(image, id, response);
@@ -454,8 +454,7 @@ export class ImageManager {
     image.isAnalysed = true;
     image.doesNeedAnalysing = false;
 
-    // TODO: adapt because try catch needs to be used instead of browser.runtime.lastError
-    if (browser.runtime.lastError || !response) {
+    if (!response) {
       image.unblock();
       await this.popupHelper.addFailedImageInPopup();
       return;
@@ -493,25 +492,19 @@ export class ImageManager {
 
   addBrowserEventListeners() {
     browser.runtime.onMessage.addListener(async (request: unknown) => {
-      if (!isExtensionMessage(request)) {
+      if (!isExtensionMessage(request) || request.message !== MessageType.BLOCK_UNBLOCK) {
         return;
       }
-      if (request.message === MessageType.BLOCK_UNBLOCK) {
-        if (this.isAutomaticBlockPaused()) {
-          const nbNewImages = this.addAllPresentImages(true, true);
-          await this.popupHelper.addImagesInPopup(nbNewImages);
-        }
+      if (this.isAutomaticBlockPaused()) {
+        const nbNewImages = this.addAllPresentImages(true, true);
+        await this.popupHelper.addImagesInPopup(nbNewImages);
+      }
 
-        if (this.options.doesAllBlock) {
-          return;
-        }
-
-        for (const image of this.allImages) {
-          if (image.src === (request as BlockUnblockMessage).src) {
-            image.isIgnored = true;
-            image.doesNeedAnalysing = false;
-            image.toggleBlock();
-          }
+      for (const image of this.allImages) {
+        if (image.src === request.src) {
+          image.isIgnored = true;
+          image.doesNeedAnalysing = false;
+          image.toggleBlock();
         }
       }
     });
@@ -576,9 +569,5 @@ export class ImageManager {
       }
     };
     browser.storage.onChanged.addListener(onOptionsChangedFunction);
-    // // Firefox needs to have the listener removed otherwise an error is thrown in the console.
-    // window.addEventListener("unload", () => {
-    //     browser.storage.onChanged.removeListener(onOptionsChangedFunction);
-    // }, {once: true});
   }
 }

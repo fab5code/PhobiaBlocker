@@ -14,23 +14,30 @@ export class BackgroundManager {
   async init() {
     await this.updateFromOptions(true);
     this.addBrowserEventListeners();
-    this.addBrowserContextMenu();
+    this.updateBrowserContextMenu();
     if (__BROWSER__ === "chrome") {
       await this.setOffscreenDocument();
     }
   }
 
-  async updateFromOptions(isInitialization: boolean, hasResumedOrPaused?: boolean, hasTrustedWebsitesChanged?: boolean) {
+  async updateFromOptions(isInitialization: boolean, hasResumedOrPaused?: boolean, hasTrustedWebsitesChanged?: boolean,
+    hasDoesAllBlockChanged?: boolean) {
     if (isInitialization || hasResumedOrPaused || hasTrustedWebsitesChanged) {
       const tabs = await browser.tabs.query({active: true, currentWindow: true})
       if (tabs && tabs[0]) {
         await this.updateCurrentTabTitleAndIcon(tabs[0].id!);
       }
     }
+    if (hasDoesAllBlockChanged) {
+      await this.updateBrowserContextMenu();
+    }
   }
 
-  async addBrowserContextMenu() {
+  async updateBrowserContextMenu() {
     await browser.contextMenus.removeAll();
+    if (this.options.doesAllBlock) {
+      return;
+    }
     browser.contextMenus.create({
       id: 'blockImage',
       title: 'Block/Unblock image',
@@ -64,20 +71,18 @@ export class BackgroundManager {
       this.options = restoreOptionsFromNewValue(changes.options.newValue);
       let hasResumedOrPaused = false;
       let hasTrustedWebsitesChanged = false;
+      let hasDoesAllBlockChanged = false;
       if (changes.options.oldValue) {
         hasResumedOrPaused = changes.options.oldValue.paused !== changes.options.newValue.paused;
         hasTrustedWebsitesChanged = changes.options.oldValue.trustedUrlRegexes !== changes.options.newValue.trustedUrlRegexes;
+        hasDoesAllBlockChanged = changes.options.oldValue.doesAllBlock !== changes.options.newValue.doesAllBlock;
       }
-      await this.updateFromOptions(false, hasResumedOrPaused, hasTrustedWebsitesChanged);
+      await this.updateFromOptions(false, hasResumedOrPaused, hasTrustedWebsitesChanged, hasDoesAllBlockChanged);
       if (__BROWSER__ === 'chrome') {
         await browser.runtime.sendMessage<ExtensionMessage>({message: MessageType.UPDATE_OPTIONS, options: this.options});
       }
     };
     browser.storage.onChanged.addListener(onOptionsChangedFunction);
-    // Firefox needs to have the listener removed otherwise an error is thrown in the console.
-    // window.addEventListener("unload", () => {
-    //   browser.storage.onChanged.removeListener(onOptionsChangedFunction);
-    // }, {once: true});
 
     browser.tabs.onRemoved.addListener((tabId) => {
       removePopupInfo(tabId);

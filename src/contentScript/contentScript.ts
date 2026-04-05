@@ -21,6 +21,5 @@ async function main() {
   const options = await restoreOptions();
   imageManager = new ImageManager(options);
   await imageManager.init();
-  // TODO: make sure background manager has been initialized and offscreen too
 }
 main();

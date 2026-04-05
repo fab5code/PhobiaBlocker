@@ -1,6 +1,5 @@
-import {MessageType, type ExtensionMessage, type GetTabIdResponse} from "@/common/messaging";
+import {MessageType, sendMessageWithReadiness, type GetTabIdResponse} from "@/common/messaging";
 import {getNewPopupInfo, savePopupInfo, type PopupInfo} from "@/popup/commonPopupInfo";
-import browser from "webextension-polyfill";
 
 export class PopupHelper {
   /**
@@ -26,7 +25,11 @@ export class PopupHelper {
     if (this.tabId) {
       await savePopupInfo(this.tabId, this.popupInfo);
     } else {
-      const response = await browser.runtime.sendMessage<ExtensionMessage, GetTabIdResponse>({message: MessageType.GET_TAB_ID});
+      let response: GetTabIdResponse | null = null;
+      try {
+        response = await sendMessageWithReadiness<GetTabIdResponse>({message: MessageType.GET_TAB_ID});
+      } catch (error) {
+      }
       if (response) {
         this.tabId = response.id;
         await savePopupInfo(this.tabId, this.popupInfo);

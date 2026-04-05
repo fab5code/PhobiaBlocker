@@ -72,7 +72,7 @@ export class OffscreenManager {
 
     if (isInitialization || hasModelChanged || hasExecutionProviderChanged || this.analyser.session === null) {
       await this.analyser.initSession(models[this.options.modelIndex], this.options.executionProvider);
-      console.log('Session with Machine Learning model', models[this.options.modelIndex].name, 'in', this.options.executionProvider, 'ready');
+      console.info('Session with Machine Learning model', models[this.options.modelIndex].name, 'in', this.options.executionProvider, 'ready');
     }
   }
 
@@ -116,7 +116,7 @@ export class OffscreenManager {
 
   logPerfoInfo(perfoInfo: PerformanceInfo) {
     const total = perfoInfo.centerCropDuration + perfoInfo.modelPreprocessingDuration + perfoInfo.modelRunDuration + perfoInfo.decisionDuration;
-    console.log('Total', total.toFixed(1) + 'ms', 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms',
+    console.info('Total', total.toFixed(1) + 'ms', 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms',
       'modelPrep', perfoInfo.modelPreprocessingDuration.toFixed(1) + 'ms', 'run', perfoInfo.modelRunDuration.toFixed(1) + 'ms',
       'decision', perfoInfo.decisionDuration.toFixed(1) + 'ms', 'Proba', perfoInfo.probability.toFixed(2));
   }
@@ -148,7 +148,7 @@ export class OffscreenManager {
         const cacheDecision = cacheKey ? this.decisionCache.getDecision(cacheKey) : null;
         if (cacheDecision) {
           resolve({decision: {isValid: true, risk: cacheDecision.risk, isTm: cacheDecision.isTm}});
-          console.log('Cache hit', cacheDecision, 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms');
+          console.info('Cache hit', cacheDecision, 'centerCrop', perfoInfo.centerCropDuration.toFixed(1) + 'ms');
           if (isLabelInProcess) {
             this.nbImagesInProcess--;
             await this.afterProcessImageCallback();
