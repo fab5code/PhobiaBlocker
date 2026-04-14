@@ -1,5 +1,8 @@
-PhobiaBlocker
-=============
+|logo| PhobiaBlocker
+====================
+
+.. |logo| image:: public/img/default/icon128.png
+   :height: 24px
 
 PhobiaBlocker is a web extension that blocks images related to your phobia.
 Choose what to block from a large list of real-world objects (e.g., insects, animals, plants).
