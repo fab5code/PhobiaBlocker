@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import tmp from "tmp";
 import {defineConfig} from "vite";
+import {viteStaticCopy} from "vite-plugin-static-copy";
 import webExtension from "vite-plugin-web-extension";
 
 function mergeManifests(basePath: string, overridePath: string): string {
@@ -27,6 +28,18 @@ export default defineConfig(({mode}) => {
         manifest,
         watchFilePaths: ['src/**/*'],
         additionalInputs: isFirefox ? [] : ["src/offscreen/offscreen.html"]
+      }),
+
+      viteStaticCopy({
+        targets: isFirefox ? [
+          {
+            src: "node_modules/onnxruntime-web/dist/ort-wasm-simd*",
+            dest: "src/background/",
+            rename: {
+              stripBase: 3
+            }
+          }
+        ] : []
       })
     ],
     build: {
@@ -34,9 +47,23 @@ export default defineConfig(({mode}) => {
       emptyOutDir: true
     },
     resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src")
-      }
+      alias: [
+        ...(isFirefox ? [{
+          find: /^onnxruntime-web$/,
+          replacement: path.resolve(
+            __dirname,
+            "node_modules/onnxruntime-web/dist/ort.webgpu.min.mjs"
+          )
+        }] : []
+        ),
+        {
+          find: "@",
+          replacement: path.resolve(__dirname, "./src")
+        }
+      ]
+    },
+    optimizeDeps: {
+      exclude: isFirefox ? ["onnxruntime-web"] : []
     },
     define: {
       __BROWSER__: JSON.stringify(isFirefox ? "firefox" : "chrome")
