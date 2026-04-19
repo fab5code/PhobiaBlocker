@@ -124,6 +124,8 @@ export class ImageInfo {
       if (xlinkHref) {
         return this.getAbsoluteUrl(xlinkHref);
       }
+    } else if (this.element.currentSrc) {
+      return this.element.currentSrc;
     } else if (this.element.src) {
       return this.element.src;
     }

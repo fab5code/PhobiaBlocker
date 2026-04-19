@@ -43,11 +43,6 @@ export class BackgroundManager {
       title: 'Block/Unblock image',
       contexts: ['image']
     });
-    browser.contextMenus.onClicked.addListener((info, tab) => {
-      if (info.menuItemId === 'blockImage' && tab?.id) {
-        browser.tabs.sendMessage(tab.id, {message: MessageType.BLOCK_UNBLOCK, src: info.srcUrl});
-      }
-    });
   }
 
   addBrowserEventListeners() {

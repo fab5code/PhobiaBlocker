@@ -1,15 +1,10 @@
 import {BackgroundManager} from "@/background/BackgroundManager";
+import {addBasicListeners} from "@/background/utils";
 import {isExtensionMessage, MessageType} from "@/common/messaging";
-import {restoreOptions, updateOptions} from "@/options/commonOptions";
+import {restoreOptions} from "@/options/commonOptions";
 import browser from "webextension-polyfill";
 
-browser.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === 'install') {
-    await browser.runtime.openOptionsPage();
-  } else if (details.reason === 'update') {
-    await updateOptions();
-  }
-});
+addBasicListeners();
 
 var isReady = false;
 browser.runtime.onMessage.addListener((request: unknown) => {
