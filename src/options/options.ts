@@ -139,7 +139,7 @@ class OptionsManager {
   }
 
   updateSpeedAccuracyTradeoffView() {
-    this.speedAccuracyTradeoffValueElement.innerHTML = models[parseInt(this.speedAccuracyTradeoffElement.value)].info;
+    this.speedAccuracyTradeoffValueElement.textContent = models[parseInt(this.speedAccuracyTradeoffElement.value)].info;
   }
 
   async manageSpeedAccuracyTradeoff() {
@@ -153,10 +153,10 @@ class OptionsManager {
   updateExecutionProviderView() {
     switch (this.executionProviderOrder[parseInt(this.executionProviderElement.value)]) {
       case ExecutionProvider.WEBGPU:
-        this.executionProviderValueElement.innerHTML = 'webgpu (faster, may vary by browser)';
+        this.executionProviderValueElement.textContent = 'webgpu (faster, may vary by browser)';
         break;
       case ExecutionProvider.WASM:
-        this.executionProviderValueElement.innerHTML = 'wasm (more reliable)';
+        this.executionProviderValueElement.textContent = 'wasm (more reliable)';
         break;
     }
   }
